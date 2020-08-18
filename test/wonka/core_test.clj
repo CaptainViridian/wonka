@@ -8,12 +8,19 @@
   (testing "Receives a list of strings and returns a list of heights (numbers)")
   (is (= (first smallList1) (getHeights (getContent "./resources/tiny.txt")))))
 
-
+(def emptyList [(list) 0])
 (def smallList2 [(list 0 2 0 0 1 0) 2])
 (def smallList3 [(list 0 1 2 0 2 0) 2])
 (def smallList4 [(list 0 2 1 0 2 0) 3])
 (def slightlyBiggerList [(getHeights (getContent "./resources/small.txt")) 12])
-(def mediumList [(getHeights (getContent "./resources/medium.txt")) 0])
+(def mediumList (getHeights (getContent "./resources/medium.txt")))
+(def hugeList (getHeights (getContent "./resources/large.txt")))
+(def increasingList [(list 1 2 3 4 5 6 70) 0])
+(def decreasingList [(reverse (first increasingList)) 0])
+
+(deftest calcChoc-empty-list
+  (testing "Returns 0 for empty list")
+  (is (= (second emptyList) (calcChoc (first emptyList)))))
 
 (deftest calcChoc-small-list-1
   (testing "Returns 4 for small list 1")
@@ -36,8 +43,19 @@
   (is (= (second slightlyBiggerList) (calcChoc (first slightlyBiggerList)))))
 
 (deftest calcChoc-medium-list
-  (testing "Returns 0 for medium list")
-  (is (not (= (second mediumList) (calcChoc (first mediumList))))))
+  (testing "Does not Return 0 for medium list")
+  (is (not (= 0 (calcChoc mediumList)))))
 
+(deftest calcChoc-huge-list
+  (testing "Does not Overflow Stack for huge list")
+  (calcChoc hugeList))
+
+(deftest calcChoc-increasing-list
+  (testing "Returns 0 for increasing-only list")
+  (is (= (second increasingList) (calcChoc (first increasingList)))))
+
+(deftest calcChoc-decreasing-list
+  (testing "Returns 0 for decreasing-only list")
+  (is (= (second decreasingList) (calcChoc (first decreasingList)))))
 
 (run-tests 'wonka.core-test)
