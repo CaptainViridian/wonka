@@ -1,8 +1,8 @@
 (ns wonka.core
   (:gen-class))
 
-(defn getContent []
-  (with-open [reader (clojure.java.io/reader "./resources/input.txt")]
+(defn getContent [name]
+  (with-open [reader (clojure.java.io/reader name)]
     (reduce conj [] (line-seq reader))))
 
 (defn getHeights [content]
@@ -36,8 +36,10 @@
 
     (iter 0 0)))
 
+(def content (getContent "./resources/input.txt"))
+
 (defn -main
   "Let's see what this thingy does"
   [& args]
-  (println (calcChoc (getHeights (getContent)))))
+  (println (calcChoc (getHeights content))))
 
