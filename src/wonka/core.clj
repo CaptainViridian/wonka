@@ -19,7 +19,7 @@
        (letfn [(endOfStreak [] (or (>= k lastPeak) (>= (nth heights k) (nth heights i))))
                (streakHeight [] (* (min (nth heights i) (nth heights k)) (count acc)))]
          (if (endOfStreak)
-           (list (reduce - (streakHeight) acc) k)
+           (list (max 0 (reduce - (streakHeight) acc)) k)
            (recur i (+ k 1) (conj acc (nth heights k))))))
 
      iter
