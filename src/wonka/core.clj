@@ -17,17 +17,25 @@
 
 (def lastPeak (second (last peaks)))
 
+(defn streak
+  [i k acc]
+  (letfn
+    [(endOfStreak [] (or (>= k lastPeak) (>= (nth heights k) (nth heights i))))
+     (streakHeight [] (* (min (nth heights i) (nth heights k)) (count acc)))]
+    (if (endOfStreak)
+      (list (reduce - (streakHeight) acc) k)
+      (recur i (+ k 1) (conj acc (nth heights k))))))
+
 (defn iter [i, total]
   (letfn
-    [(streak [k acc]
-       (if (or (>= k lastPeak) (>= (nth heights k) (nth heights i)))
-         (list (reduce - (* (min (nth heights i) (nth heights k)) (count acc)) acc) k)
-         (recur (+ k 1) (conj acc (nth heights k)))))]
-    (if (>= i (- (count heights) 1))
+    [(endOfWalls [] (>= i (- (count heights) 1)))
+     (streakFromI [] (streak i (+ i 1) (vector)))
+     (isPeak [] (> (nth heights i) 0))]
+    (if (endOfWalls)
       total
-      (if (> (nth heights i) 0)
-        (let [[result index] (streak (+ i 1) (vector))]
-          (recur index (+ total result)))
+      (if (isPeak)
+        (let [[result streakEndIndex] (streakFromI)]
+          (recur streakEndIndex (+ total result)))
         (recur (+ i 1) total)))))
 
 (defn -main
