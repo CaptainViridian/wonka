@@ -8,31 +8,40 @@
 (defn getHeights [content]
   (vec (map (fn [i] (Integer/parseInt i)) content)))
 
-(defn calcChoc [heights]
+(defn calcChoc [walls]
   (let
-    [indexed (map-indexed (fn [idx itm] [itm idx]) heights)
+    [indexed (map-indexed (fn [idx itm] [itm idx]) walls)
      peaks (vec (filter (fn [[itm]] (> itm 0)) indexed))
      lastPeak (second (last peaks))
 
+     height
+     (fn [wallIndex] (nth walls wallIndex))
+
      streak
-     (fn [i k acc]
-       (letfn [(endOfStreak [] (or (>= k lastPeak) (>= (nth heights k) (nth heights i))))
-               (streakHeight [] (* (min (nth heights i) (nth heights k)) (count acc)))]
+     (fn [streakBegHeight currWall streakAccumulator]
+       (letfn [(isLastPeak [] (>= currWall lastPeak))
+               (higherWall [] (>= (height currWall) streakBegHeight))
+               (endOfStreak [] (or (isLastPeak) (higherWall)))
+               (streakHeight [] (* (min streakBegHeight (height currWall)) (count streakAccumulator)))
+               (streakMap [] {:result (max 0 (reduce - (streakHeight) streakAccumulator)) :endIndex currWall})
+               (addWallToStreak [] (conj streakAccumulator (height currWall)))]
+
          (if (endOfStreak)
-           (list (max 0 (reduce - (streakHeight) acc)) k)
-           (recur i (+ k 1) (conj acc (nth heights k))))))
+           (streakMap)
+           (recur streakBegHeight (+ currWall 1) (addWallToStreak)))))
 
      iter
-     (fn [i, total]
-       (letfn [(endOfWalls [] (>= i (- (count heights) 1)))
-               (streakFromI [] (streak i (+ i 1) (vector)))
-               (isPeak [] (> (nth heights i) 0))]
+     (fn [currWall, total]
+       (letfn [(endOfWalls [] (>= currWall (- (count walls) 1)))
+               (streakFromCurrWall [] (streak (height currWall) (+ currWall 1) (vector)))
+               (isPeak [] (> (height currWall) 0))]
+
          (if (endOfWalls)
            total
            (if (isPeak)
-             (let [[result streakEndIndex] (streakFromI)]
+             (let [{result :result streakEndIndex :endIndex} (streakFromCurrWall)]
                (recur streakEndIndex (+ total result)))
-             (recur (+ i 1) total)))))]
+             (recur (+ currWall 1) total)))))]
 
     (iter 0 0)))
 
