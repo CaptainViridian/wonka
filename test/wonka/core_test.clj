@@ -18,6 +18,7 @@
 (def increasingList (list 1 2 3 4 5 6 70))
 (def decreasingList (reverse increasingList))
 (def steadyList (list 4 4 4 4 4 4 4))
+(def valleyAtEndList (list 5 2 3 1 4 1))
 
 (deftest calcChoc-empty-list
   (testing "Returns 0 for empty list"
@@ -62,5 +63,9 @@
 (deftest calcChoc-steady-list
   (testing "Returns 0 for list with all the same values"
     (is (= 0 (calcChoc steadyList)))))
+
+(deftest calcChoc-valley-at-list-end
+  (testing "Returns 6 for list with a valley at the end of the list"
+    (is (= 6 (calcChoc valleyAtEndList)))))
 
 (run-tests 'wonka.core-test)
