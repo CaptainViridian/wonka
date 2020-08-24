@@ -10,42 +10,54 @@
 
 (defn calcChoc [walls]
   (let
-    [indexed (map-indexed (fn [idx itm] [itm idx]) walls)
-     peaks (vec (filter (fn [[itm]] (> itm 0)) indexed))
-     lastPeak (second (last peaks))
+    [numberOfWalls (count walls)
+     nonEmpty (> numberOfWalls  0)
+     lastWall (if nonEmpty (- numberOfWalls 1) 0)
+     highestWall (if nonEmpty (first (apply max-key second (map-indexed vector walls))) 0)
 
      height
      (fn [wallIndex] (nth walls wallIndex))
 
      streak
-     (fn [streakBegHeight currWall streakAccumulator]
-       (letfn [(isLastPeak [] (>= currWall lastPeak))
-               (higherWall [] (>= (height currWall) streakBegHeight))
-               (endOfStreak [] (or (isLastPeak) (higherWall)))
-               (streakHeight [] (* (min streakBegHeight (height currWall)) (count streakAccumulator)))
-               (streakMap [] {:result (max 0 (reduce - (streakHeight) streakAccumulator)) :endIndex currWall})
-               (addWallToStreak [] (conj streakAccumulator (height currWall)))]
+     (fn [streakBeg next isLastWall]
+       (letfn [(streakBegHeight [] (height streakBeg))
+               (higherWall [wall] (>= (height wall) (streakBegHeight)))
+               (endOfStreak [wall] (or (isLastWall wall) (higherWall wall)))
+               (streakArea [wall accumulator] (* (min (streakBegHeight) (height wall)) (count accumulator)))
+               (streakMap [wall accumulator] {:result (max 0 (reduce - (streakArea wall accumulator) accumulator)) :endIndex wall})
+               (addWallToStreak [wall accumulator] (conj accumulator (height wall)))
 
-         (if (endOfStreak)
-           (streakMap)
-           (recur streakBegHeight (+ currWall 1) (addWallToStreak)))))
+               (iter [currWall streakAccumulator]
+                 (if (endOfStreak currWall)
+                   (streakMap currWall streakAccumulator)
+                   (recur (next currWall) (addWallToStreak currWall streakAccumulator))))]
+         (iter (next streakBeg) (vector))))
 
-     iter
-     (fn [currWall, total]
-       (letfn [(endOfWalls [] (>= currWall (- (count walls) 1)))
-               (streakFromCurrWall [] (streak (height currWall) (+ currWall 1) (vector)))
-               (isPeak [] (> (height currWall) 0))]
+     calculate
+     (fn [start next end]
+       (letfn [(endOfWalls [wall] (= wall end))
+               (streakFromCurrWall [wall] (streak wall next endOfWalls))
+               (isPeak [wall] (> (height wall) 0))
+               (iter [currWall total]
+                 (if (endOfWalls currWall)
+                   total
+                   (if (isPeak currWall)
+                     (let [{result :result streakEndIndex :endIndex} (streakFromCurrWall currWall)]
+                       (recur streakEndIndex (+ total result)))
+                     (recur (next currWall) total))))]
+         (iter start 0)))
 
-         (if (endOfWalls)
-           total
-           (if (isPeak)
-             (let [{result :result streakEndIndex :endIndex} (streakFromCurrWall)]
-               (recur streakEndIndex (+ total result)))
-             (recur (+ currWall 1) total)))))]
+     forward
+     (fn [wall] (+ wall 1))
 
-    (iter 0 0)))
+     backwards
+     (fn [wall] (- wall 1))
 
-(def content (getContent "./resources/input.txt"))
+     firstHalf (calculate 0 forward highestWall)
+     secondHalf (calculate lastWall backwards highestWall)]
+    (+ firstHalf secondHalf)))
+
+(def content (getContent "./resources/large.txt"))
 
 (defn -main
   "Let's see what this thingy does"
